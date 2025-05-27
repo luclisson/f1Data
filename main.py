@@ -10,9 +10,13 @@ session = fastf1.get_session(2025, 'Monaco', 'R')
 session.load()
 albon = session.get_driver('ALB')
 alb = session.laps.pick_drivers('ALB')
+sainz = session.get_driver('SAI')
+sai = session.laps.pick_drivers('SAI')
 
 alb_df = pd.DataFrame(data=alb)
 alb_car_data = alb.get_car_data()
+sai_df = pd.DataFrame(data=sai)
+sai_car_data = sai.get_car_data()
 
 alb_speed = alb_car_data['Speed']
 alb_time = alb_car_data['Time']
@@ -20,6 +24,8 @@ alb_time = alb_car_data['Time']
 
 alb_df2 = alb_df[['LapTime', 'Sector1Time','Sector2Time', 'Sector3Time', 'TyreLife', 'IsAccurate']]
 alb_df2 = alb_df2.query("IsAccurate == True")
+sai_df2 = sai_df[['LapTime', 'Sector1Time','Sector2Time', 'Sector3Time', 'TyreLife', 'IsAccurate']]
+sai_df2 = sai_df2.query("IsAccurate == True")
 
 plt.ylabel('seconds')
 plt.xlabel('laps')
@@ -28,6 +34,7 @@ x_values = np.arange(1, alb_df2.get('IsAccurate').count() + 1 ,1)
 
 for col in ['LapTime', 'Sector1Time', 'Sector2Time', 'Sector3Time']:
     alb_df2[col] = alb_df2[col].dt.total_seconds()
+    sai_df2[col] = sai_df2[col].dt.total_seconds()
 
 '''
 plt.plot(x_values, alb_df2['LapTime'], label = 'LapTime')
@@ -35,12 +42,20 @@ plt.plot(x_values, alb_df2['Sector1Time'], label = 'Sector1')
 plt.plot(x_values, alb_df2['Sector2Time'], label = 'Sector2')
 plt.plot(x_values, alb_df2['Sector3Time'], label = 'Sector3')
 '''
-plt.scatter(x_values,alb_df2['LapTime'])
-func = np.poly1d(np.polyfit(x_values,alb_df2['LapTime'],6))
+plt.scatter(x_values,alb_df2['LapTime'], c='b')
+plt.scatter(x_values,sai_df2['LapTime'], c='r')
+funcALB = np.poly1d(np.polyfit(x_values,alb_df2['LapTime'],6))
+funcSAI = np.poly1d(np.polyfit(x_values,sai_df2['LapTime'],7))
 
-rSquared = r2_score(alb_df2['LapTime'], func(x_values))
-print(rSquared)
-plt.plot(x_values, func(x_values), c='r')
+rSquaredALB = r2_score(alb_df2['LapTime'], funcALB(x_values))
+rSquaredSAI = r2_score(sai_df2['LapTime'], funcSAI(x_values))
+print(str(rSquaredALB) + ": ALB r2")
+print(str(rSquaredSAI) + ": SAI r2")
+print(str(funcSAI(x_values).mean()) + ": SAI avr round times")
+print(str(funcALB(x_values).mean()) + ": ALB avr round times")
+
+plt.plot(x_values, funcALB(x_values), c='b', label = 'alb lap times')
+plt.plot(x_values, funcSAI(x_values), c='r', label = 'sai lab times')
 plt.legend()
 plt.show()
 
