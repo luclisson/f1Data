@@ -5,6 +5,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import fastf1 as fastf1
 from sklearn.metrics import r2_score
+import seaborn as sns
+import statsmodels.api as sm
+from sklearn.preprocessing import StandardScaler
+scale = StandardScaler()
+
+
+
+
+sns.set()
 
 session = fastf1.get_session(2025, 'Monaco', 'R')
 session.load()
@@ -27,8 +36,8 @@ alb_df2 = alb_df2.query("IsAccurate == True")
 sai_df2 = sai_df[['LapTime', 'Sector1Time','Sector2Time', 'Sector3Time', 'TyreLife', 'IsAccurate']]
 sai_df2 = sai_df2.query("IsAccurate == True")
 
-plt.ylabel('seconds')
-plt.xlabel('laps')
+#plt.ylabel('seconds')
+#plt.xlabel('laps')
 
 x_values = np.arange(1, alb_df2.get('IsAccurate').count() + 1 ,1)
 
@@ -41,6 +50,8 @@ plt.plot(x_values, alb_df2['LapTime'], label = 'LapTime')
 plt.plot(x_values, alb_df2['Sector1Time'], label = 'Sector1')
 plt.plot(x_values, alb_df2['Sector2Time'], label = 'Sector2')
 plt.plot(x_values, alb_df2['Sector3Time'], label = 'Sector3')
+'''
+
 '''
 plt.scatter(x_values,alb_df2['LapTime'], c='b')
 plt.scatter(x_values,sai_df2['LapTime'], c='r')
@@ -57,8 +68,8 @@ print(str(funcALB(x_values).mean()) + ": ALB avr round times")
 plt.plot(x_values, funcALB(x_values), c='b', label = 'alb lap times')
 plt.plot(x_values, funcSAI(x_values), c='r', label = 'sai lab times')
 plt.legend()
-plt.show()
-
+#plt.show()
+'''
 
 '''
 idee für morgen:
@@ -69,4 +80,21 @@ idee für morgen:
 
 multiple regression
 '''
+carDataWilliams = sai_car_data._append(alb_car_data)
+carDataWilliamsX = carDataWilliams[['RPM', 'nGear']]
+carDataWilliamsY = carDataWilliams[['Speed']]
+
+carDataWilliamsX[['RPM', 'nGear']] = scale.fit_transform(carDataWilliamsX[['RPM', 'nGear']].values)
+carDataWilliamsX = sm.add_constant(carDataWilliamsX)
+
+est = sm.OLS(carDataWilliamsY,carDataWilliamsX).fit()
+print(est.summary())
+
+predictionSet = scale.transform([[11000, 8]])
+predictionSet = np.insert(predictionSet[0],0,1)
+predicted = est.predict(predictionSet)
+print(predicted)
+
+#sns.pairplot(carDataWilliamsDF)
+#plt.show()
 # %%
